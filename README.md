@@ -5,7 +5,7 @@ Built as an interview assignment — clean, simple, and easy to run.
 
 ---
 
-## 🚀 Features
+## Features
 - Create / Read / Update / Delete tasks (CRUD)
 - List tasks with filters (priority, status)
 - Mark tasks complete / incomplete
@@ -14,11 +14,11 @@ Built as an interview assignment — clean, simple, and easy to run.
 - Shared CRUD logic between API and CLI
 - Validation using Pydantic models
 - Basic tests using `pytest`
-- Simple static frontend (`/static/index.html`)
+- Simple static frontend (`/static/index.html`) that interacts with the API
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 - Python 3.8+
 - FastAPI
 - SQLAlchemy (ORM)
@@ -29,9 +29,9 @@ Built as an interview assignment — clean, simple, and easy to run.
 
 ---
 
-# ⚡ Quick Start (Complete Instructions)
+# Quick Start (Complete Instructions)
 
-These commands allow **ANY reviewer** to run the project on **Windows / Linux / macOS**.
+These commands allow **ANY reviewer** to run the project on **Windows / macOS / Linux**.
 
 ---
 
@@ -44,8 +44,9 @@ cd task-manager-v2
 ---
 
 ## 2. Create & activate a virtual environment  
+
 ### Windows (PowerShell)
-```bash
+```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
@@ -66,42 +67,53 @@ pip install -r requirements.txt
 ---
 
 ## 4. (Optional) Reset the database  
-If reviewers want a clean database:
+If you want a clean DB:
 
-```bash
-del tasks_v2.db          # Windows
-rm tasks_v2.db           # macOS/Linux
+```powershell
+del tasks_v2.db      # Windows
 ```
 
-Run once to auto-create tables:
+```bash
+rm tasks_v2.db       # macOS/Linux
+```
+
+Recreate tables:
 ```bash
 python -c "from src.task_manager.db import Base, engine; Base.metadata.create_all(engine)"
 ```
 
 ---
 
-## 5. Run the FastAPI backend
+## 5. Start the FastAPI backend
 ```bash
-uvicorn src.task_manager.main:app --reload --port 8000
+uvicorn src.task_manager.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Backend available at:
-**http://127.0.0.1:8000**
-
-API docs:
-**http://127.0.0.1:8000/docs**
+- **http://127.0.0.1:8000**
+- **API Docs:** http://127.0.0.1:8000/docs
 
 ---
 
-## 6. Open the frontend UI  
-Simply open this file in a browser:
+## 6. Serve the frontend UI (Important)
 
+Do **NOT** double-click the HTML file.  
+Browsers block API calls from `file://` pages.
+
+Instead, serve the `static/` folder using Python’s built-in server:
+
+### Windows / macOS / Linux
+```bash
+cd static
+python -m http.server 8001
 ```
-static/index.html
+
+Open the UI in a browser:
+```
+http://127.0.0.1:8001/index.html
 ```
 
-The UI automatically connects to:
-
+The UI automatically communicates with:
 ```
 http://127.0.0.1:8000
 ```
@@ -109,7 +121,6 @@ http://127.0.0.1:8000
 ---
 
 ## 7. Use the CLI (Typer)
-Examples:
 
 ### Create a task
 ```bash
@@ -121,7 +132,7 @@ python -m src.task_manager.cli create "Buy milk" --description "From store" --pr
 python -m src.task_manager.cli list
 ```
 
-### Mark complete
+### Mark task complete
 ```bash
 python -m src.task_manager.cli complete 1
 ```
@@ -135,16 +146,17 @@ pytest -q
 
 ---
 
-##  Project Structure
+# Project Structure
+
 ```
 task-manager-v2/
 │── src/
 │   └── task_manager/
 │       ├── main.py          # FastAPI app
 │       ├── cli.py           # Typer CLI
-│       ├── db.py            # DB session + base
+│       ├── db.py            # DB session factory + Base
 │       ├── models.py        # SQLAlchemy models
-│       ├── schemas.py       # Pydantic models
+│       ├── schemas.py       # Pydantic schemas
 │       ├── crud.py          # CRUD functions
 │── static/
 │   └── index.html           # Frontend UI
@@ -157,13 +169,14 @@ task-manager-v2/
 ---
 
 ##  Notes
-- No virtual environments or large files are included in the repo.
-- The project runs identically on Windows, Linux, and macOS.
-- API + CLI share the same database and logic.
+- Virtual environment is **not** included in the repo.
+- Works identically on Windows, macOS, and Linux.
+- API + CLI share the same database logic.
+- Frontend requires running a static server.
 
 ---
 
 ##  Done!
-This project is fully ready for review.  
-If you need anything else, feel free to reach out!
+Your project is fully ready for review.  
+If you need deployment help or enhancements, feel free to ask!
 
