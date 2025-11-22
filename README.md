@@ -1,32 +1,40 @@
 # Task Manager v2
 
-## Overview
-Task Manager v2 is a small RESTful task-tracking application implemented in Python using FastAPI for the API, SQLAlchemy (SQLite) for persistence, and Typer for a command-line interface. It is designed as an interview/project submission: clean, minimal, and easy to run.
+A simple RESTful task-tracking application implemented in Python using FastAPI, SQLAlchemy (SQLite) for persistence, and Typer for a command-line interface. Designed as a clean, minimal technical assignment that is easy to run and evaluate.
+
+---
 
 ## Features
-- Create, read, update, delete tasks (CRUD)
-- List tasks with optional filters (priority, status)
-- Mark tasks complete/incomplete
-- Priority: low / medium / high
-- Data persists to a local SQLite file (`tasks_v2.db`)
-- CLI (Typer) and API (FastAPI) share the same database/CRUD logic
-- Basic validation via Pydantic schemas
-- Simple test using `pytest`
+- Create / Read / Update / Delete tasks (CRUD)
+- Filter tasks by priority or completion status
+- Mark tasks complete / incomplete
+- Task fields: title, description, status, priority, created_at, due_date
+- SQLite persistence (`tasks_v2.db`)
+- CLI tool using Typer
+- API using FastAPI with automatic docs
+- Simple HTML frontend (`static/index.html`)
+- Unit test using pytest
+
+---
 
 ## Tech stack
 - Python 3.8+
-- FastAPI (API)
-- Uvicorn (ASGI server)
-- SQLAlchemy (ORM)
-- Pydantic (validation)
+- FastAPI
+- Uvicorn
+- SQLAlchemy
+- Pydantic
 - Typer (CLI)
-- pytest (tests)
+- pytest
 
-## Quick setup (Windows PowerShell)
-1. Extract the ZIP and open PowerShell **inside** the project folder:
-   - Example folder: `C:\Users\<you>\Downloads\task-manager-v2`
+---
 
-2. Create & activate a virtual environment (only first time):
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+#  Quick Start (Complete Instructions)
+
+These commands allow ANY reviewer on Windows, macOS or Linux to run the project.
+
+---
+
+## 1. Clone the repository
+```bash
+git clone https://github.com/RythamChopra/task-manager-v2
+cd task-manager-v2
