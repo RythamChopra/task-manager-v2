@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Task Manager — UI</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(180deg,#f8fafc 0%, #eef2ff 100%); }
+    .card { transition: transform .12s ease, box-shadow .12s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(18,38,63,0.08); }
+    .muted { color: #6b7280; }
+  </style>
+</head>
+<body class="min-h-screen font-sans text-slate-900">
+
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-extrabold">Task Manager</h1>
+        <p class="muted">FastAPI backend • Simple, clean UI</p>
+      </div>
+      <div>
+        <button id="refreshBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow">Refresh</button>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <form id="createForm" class="bg-white p-4 rounded-lg shadow-sm">
+        <h2 class="font-semibold mb-2">Create a task</h2>
+        <input id="title" type="text" placeholder="Title" required class="w-full border rounded p-2 mb-2" />
+        <textarea id="description" placeholder="Description" class="w-full border rounded p-2 mb-2"></textarea>
+        <div class="flex gap-2 mb-2">
+          <select id="priority" class="flex-1 border rounded p-2">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+          <input id="due_date" type="date" class="border rounded p-2" />
+        </div>
+        <div class="flex gap-2">
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Create</button>
+          <button id="clearBtn" type="button" class="px-4 py-2 border rounded">Clear</button>
+        </div>
+      </form>
+
+      <div class="bg-white p-4 rounded-lg shadow-sm md:col-span-2">
+        <h2 class="font-semibold mb-2">Filters & quick actions</h2>
+        <div class="flex gap-2 mb-3">
+          <select id="filterPriority" class="border rounded p-2">
+            <option value="">All priorities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <select id="filterStatus" class="border rounded p-2">
+            <option value="">All status</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+          <input id="searchTitle" placeholder="Search title" class="flex-1 border rounded p-2" />
+          <button id="applyFilters" class="bg-indigo-600 text-white px-4 py-2 rounded">Apply</button>
+        </div>
+
+        <div class="flex flex-wrap gap-3 muted text-sm">
+          <div class="px-3 py-2 bg-slate-50 rounded">Tip: click Refresh or Create to reload list</div>
+          <div class="px-3 py-2 bg-slate-50 rounded">Data saved to backend (SQLite)</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasksContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></section>
+
+    <footer class="mt-8 text-center muted text-sm">
+      Built with FastAPI • Local demo
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:8000';
+
+    function el(tag, attrs = {}, children = []) {
+      const e = document.createElement(tag);
+      Object.entries(attrs).forEach(([k, v]) => {
+        if (k === 'class') e.className = v;
+        else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v);
+      });
+      (Array.isArray(children) ? children : [children]).forEach(c => {
+        if (typeof c === 'string') e.append(document.createTextNode(c));
+        else if (c) e.append(c);
+      });
+      return e;
+    }
+
+    async function api(path, opts = {}) {
+      const r = await fetch(API_BASE + path, {
+        headers: { 'Content-Type': 'application/json' },
+        ...opts
+      });
+      if (!r.ok) throw r;
+      return r.json();
+    }
+
+    function renderTask(t) {
+      const priorityColors = {
+        low: 'bg-green-100 text-green-800',
+        medium: 'bg-yellow-100 text-yellow-800',
+        high: 'bg-red-100 text-red-800'
+      };
+
+      return el('article', { class: 'card bg-white p-4 rounded-lg shadow-sm flex flex-col justify-between' }, [
+        el('div', {}, [
+          el('div', { class: 'flex items-start justify-between' }, [
+            el('h3', { class: 'text-lg font-semibold' }, t.title),
+            el('span', { class: `px-2 py-1 rounded text-sm ${priorityColors[t.priority]}` }, t.priority)
+          ]),
+          el('p', { class: 'muted text-sm mt-2' }, t.description || ''),
+          el('div', { class: 'mt-3 text-xs muted' }, `Created: ${new Date(t.created_at).toLocaleString()}`),
+          el('div', { class: 'text-xs muted' }, t.due_date ? ('Due: ' + new Date(t.due_date).toLocaleDateString()) : '')
+        ]),
+        el('div', { class: 'mt-3 flex gap-2' }, [
+          el('button', { class: 'px-3 py-1 bg-indigo-600 text-white rounded text-sm', onclick: async ()=>{await toggleComplete(t.id);} }, t.completed ? 'Mark Incomplete' : 'Mark Complete'),
+          el('button', { class: 'px-3 py-1 border rounded text-sm', onclick: ()=> editTask(t) }, 'Edit'),
+          el('button', { class: 'px-3 py-1 border rounded text-sm', onclick: async ()=>{ if(confirm('Delete this task?')) await deleteTask(t.id); }}, 'Delete')
+        ])
+      ]);
+    }
+
+    async function loadTasks() {
+      const tasks = await api('/tasks');
+      const container = document.getElementById('tasksContainer');
+      container.innerHTML = '';
+      tasks.forEach(t => container.append(renderTask(t)));
+    }
+
+    async function toggleComplete(id) {
+      await api(`/tasks/${id}/toggle`, { method: 'POST' });
+      loadTasks();
+    }
+
+    async function deleteTask(id) {
+      await api(`/tasks/${id}`, { method: 'DELETE' });
+      loadTasks();
+    }
+
+    function editTask(t) {
+      document.getElementById('title').value = t.title;
+      document.getElementById('description').value = t.description;
+      document.getElementById('priority').value = t.priority;
+      document.getElementById('due_date').value = t.due_date ? t.due_date.split('T')[0] : '';
+      document.getElementById('createForm').dataset.editing = t.id;
+      scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('createForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const form = e.target;
+      const editingId = form.dataset.editing;
+
+      const data = {
+        title: document.getElementById('title').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        priority: document.getElementById('priority').value,
+        due_date: document.getElementById('due_date').value ? new Date(document.getElementById('due_date').value).toISOString() : null
+      };
+
+      if (editingId) {
+        await api(`/tasks/${editingId}`, { method:'PATCH', body:JSON.stringify(data) });
+        delete form.dataset.editing;
+      } else {
+        await api('/tasks', { method:'POST', body:JSON.stringify(data) });
+      }
+
+      form.reset();
+      loadTasks();
+    };
+
+    document.getElementById('clearBtn').onclick = ()=>{
+      document.getElementById('createForm').reset();
+      delete document.getElementById('createForm').dataset.editing;
+    };
+
+    document.getElementById('refreshBtn').onclick = loadTasks;
+    document.getElementById('applyFilters').onclick = loadTasks;
+
+    loadTasks();
+  </script>
+</body>
+</html>

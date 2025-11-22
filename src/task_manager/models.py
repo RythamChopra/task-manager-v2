@@ -1,0 +1,21 @@
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Enum
+from sqlalchemy.sql import func
+from .db import Base
+import enum
+
+class Priority(enum.Enum):
+    low = 'low'
+    medium = 'medium'
+    high = 'high'
+
+class Task(Base):
+    __tablename__ = 'tasks'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, default='')
+    status = Column(String(20), default='pending')
+    priority = Column(Enum(Priority), default=Priority.medium)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    due_date = Column(DateTime, nullable=True)
+    completed = Column(Boolean, default=False)
